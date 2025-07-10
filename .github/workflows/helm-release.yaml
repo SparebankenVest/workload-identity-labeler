@@ -5,6 +5,11 @@ on:
     tags:
       - 'helm-v*.*.*'
 
+env:
+  ACR_REGISTRY: dokken.azurecr.io
+  CHARTS_DIR: charts
+  ARTIFACT_PATH: .cr-release-packages  # Default path from https://github.com/helm/chart-releaser
+
 jobs:
   release-helm:
     permissions:
@@ -15,6 +20,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: ⚓️ Set up Helm
+        uses: azure/setup-helm@v4.3.0
+        with:
+          version: v3.18.0
       - name: 📝 Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
@@ -24,5 +33,27 @@ jobs:
         uses: helm/chart-releaser-action@v1.7.0
         with:
           charts_dir: deploy/charts
+          mark_as_latest: ${{ github.ref_name == env.DEFAULT_BRANCH }}
+          skip_upload: true
+          skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: 🔑 Auth to ${{ env.ACR_REGISTRY }}
+        run: |
+          echo ${{ secrets.DOKKEN_CLIENT_SECRET }} | helm registry login ${{ env.ACR_REGISTRY }} \
+          --username ${{ secrets.DOKKEN_CLIENT_ID }} \
+          --password-stdin
+
+      - name: 🚀 Push chart(s) to ${{ env.ACR_REGISTRY }} helm repository
+        shell: bash
+        working-directory: ${{ env.ARTIFACT_PATH }}
+        run: |
+          for filename in *.tgz
+          do
+            if [[ -e "$filename" ]]; then
+              helm push $filename oci://${{ env.ACR_REGISTRY }}/helm
+            else
+              continue
+            fi
+          done
+
