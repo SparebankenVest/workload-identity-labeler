@@ -1,0 +1,25 @@
+name: workload-identity-labeler
+id: ari:cloud:compass:55cc1ee7-8682-4042-a227-951c72565e89:component/4c329750-b8ae-4f35-938d-3c3c28c42246/dd402ce3-7116-4de8-8b4f-db505fbe6c30
+description: A kubernetes controller that looks for service account with `workload.identity.labeler/azure-mi-client-name` labels and adds a `azure.workload.identity/client-id` label based on the Managed Identity name given.
+configVersion: 1
+typeId: SERVICE
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/SparebankenVest/workload-identity-labeler
+relationships:
+  DEPENDS_ON: []
+labels:
+  - source:github
+customFields:
+  - name: Date of last security review
+    type: text
+    value: null
+  - name: Number of users
+    type: number
+    value: null
+  - name: Requires audit?
+    type: boolean
+    value: false
